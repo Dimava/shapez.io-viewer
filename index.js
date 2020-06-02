@@ -278,15 +278,18 @@ function checkImpossible(key) {
 		return `Impossible to create empty layer #${layers.indexOf(emptyLayer)}`;
 	}
 	let forms = layers.map(l => {
-		return 8 * (l[0] == '-') + 4 * (l[2] == '-') + 2 * (l[4] == '-') + 1 * (l[6] == '-');
+		return 8 * (l[0] != '-') + 4 * (l[2] != '-') + 2 * (l[4] != '-') + 1 * (l[6] != '-');
 	});
 	// first, pop layers that can be layered:
 	while (forms.length >= 2) {
-		if (forms[length - 1] & forms[length - 2]) {
+		if ( (forms[forms.length - 1] & forms[forms.length - 2]) ) {
 			forms.pop();
 		} else {
 			break;
 		}
+	}
+	if (forms.length < 2) {
+		return;
 	}
 
 	function rotateForm(form) {
@@ -302,8 +305,8 @@ function checkImpossible(key) {
 			}
 		}
 		let isDropped = true;
-		for (let i = 0; i < forms.length; i++) {
-			if ((forms[i] & 12) > (forms[i - 1] & 12)) {
+		for (let i = 1; i < forms.length; i++) {
+			if ((forms[i] & 12) & ~(forms[i - 1] & 12)) {
 				isDropped = false;
 			}
 		}
