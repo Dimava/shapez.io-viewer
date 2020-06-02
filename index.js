@@ -466,6 +466,7 @@ function initVariants() {
 	for (let shape of Object.values(enumSubShape)) {
 		let li = document.createElement('li');
 		li.innerHTML = `<code>${enumSubShapeToShortcode[shape]}</code> ${shape[0].toUpperCase() + shape.slice(1)}`;
+		li.onclick = () => viewShape(enumSubShapeToShortcode[shape]);
 		ulShapes.append(li);
 	}
 	// <ul id="colorCodes">
@@ -480,7 +481,9 @@ function initVariants() {
 		li.innerHTML = `
     		<code>${enumColorToShortcode[color]}</code>
     		<span class="colorPreview" style="background: ${enumColorsToHexCode[color]};"></span>
-    		${color[0].toUpperCase() + color.slice(1)}`;
+    		${color[0].toUpperCase() + color.slice(1)}
+    	`;
+    	li.onclick = () => viewShape(enumSubShapeToShortcode[enumSubShape.circle] + enumColorToShortcode[color]);
 		ulColors.append(li);
 	}
 }
