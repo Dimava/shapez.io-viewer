@@ -485,6 +485,8 @@ function internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi) {
 
 						const inner = 0.5;
 						const inner_center = 0.45;
+						const size = 1.3;
+						context.scale(size, size);
 
 						context.moveTo(0, 0);
 						context.lineTo(0, inner);
@@ -503,6 +505,8 @@ function internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi) {
 						context.beginPath();
 
 						const inner = 0.5;
+						const size = 1.22;
+						context.scale(size, size);
 
 						context.moveTo(0, 0);
 						context.lineTo(0, inner);
@@ -522,7 +526,9 @@ function internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi) {
 						context.scale(dims, -dims);
 						context.beginPath();
 
-						const rad = 0.02;
+						const rad = 0.001;
+						const size = 1.2;
+						context.scale(size, size);
 
 						// with rounded borders
 						context.moveTo(0, 0);
@@ -541,6 +547,8 @@ function internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi) {
 						context.beginPath();
 
 						const inner = 0.4;
+						const size = 1.2;
+						context.scale(size, size);
 
 						context.moveTo(0, 0);
 						context.lineTo(1, 0);
@@ -561,6 +569,8 @@ function internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi) {
 						context.beginPath();
 
 						const inner = 0.5;
+						const size = 1.1;
+						context.scale(size, size);
 
 						context.moveTo(0, 0);
 						context.lineTo(inner, 0);
