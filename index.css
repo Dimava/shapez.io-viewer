@@ -69,9 +69,6 @@ a{
     height: 40px;
     color: #f77;
     margin-top: 10px;
-    display: flex;
-    text-align: left;
-    align-items: center;
 }
 
 #error code {

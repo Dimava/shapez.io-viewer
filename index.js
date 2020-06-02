@@ -143,11 +143,11 @@ function fromShortKey(key) {
 	const sourceLayers = key.replace(/\s/g, '').split(":").filter(Boolean).map(parseShortKey);
 
 	if (checkImpossible(sourceLayers.join(':'))) {
-		throw new Error(checkImpossible(sourceLayers.join(':')));
+		showError(new Error(checkImpossible(sourceLayers.join(':'))));
 	}
 
 	if (sourceLayers.length > 4) {
-		throw new Error("Only 4 layers allowed");
+		showError(new Error("Only 4 layers allowed"));
 	}
 
 	let layers = [];
@@ -155,16 +155,16 @@ function fromShortKey(key) {
 		let text = sourceLayers[i];
 
 		if (checkUnknown(text)) {
-			throw new Error(checkUnknown(text));
+			showError(new Error(checkUnknown(text)));
 		}
 
-		if (text.length !== 8) {
-			throw new Error("Invalid layer: '" + text + "' -> must be 8 characters");
-		}
+		// if (text.length !== 8) {
+		// 	throw new Error("Invalid layer: '" + textToHTML(text) + "' -> must be 8 characters");
+		// }
 
-		if (text === "--".repeat(4)) {
-			throw new Error("Empty layers are not allowed");
-		}
+		// if (text === "--".repeat(4)) {
+		// 	throw new Error("Empty layers are not allowed");
+		// }
 
 		const quads = [null, null, null, null];
 		for (let quad = 0; quad < 4; ++quad) {
@@ -173,14 +173,14 @@ function fromShortKey(key) {
 			const color = enumShortcodeToColor[text[quad * 2 + 1]];
 			if (subShape) {
 				if (!color) {
-					throw new Error("Invalid shape color key: " + key);
+					// throw new Error("Invalid shape color key: " + textToHTML(key));
 				}
 				quads[quad] = {
 					subShape,
 					color,
 				};
 			} else if (shapeText !== "-") {
-				throw new Error("Invalid shape key: " + shapeText);
+				// throw new Error("Invalid shape key: " + textToHTML(shapeText));
 			}
 		}
 		layers.push(quads);
@@ -215,10 +215,13 @@ function parseShortKey(key) {
 
 	if (key.match(/[^A-Za-z:\-]/)) {
 		let match = key.match(/[^A-Za-z:\-]/);
-		throw new Error(`key ${escKey} has invalid symbol: <code>${textToHTML(match[0])}</code>`);
+		showError(new Error(`key ${escKey} has invalid symbol: <code>${textToHTML(match[0])}</code>`));
 	}
 
 	if (key.length == 8) {
+		if (!key.match(/^([A-Z\-][a-z\-]){4}$/)) {
+			showError(new Error(`key ${escKey} is invalid`));
+		}
 		return key;
 	}
 
@@ -230,7 +233,7 @@ function parseShortKey(key) {
 		if (key.match(/^[A-Z]$/)) {
 			return `${key}${clr(key)}`.repeat(4);
 		}
-		throw new Error(`key ${escKey} is invalid`);
+		showError(new Error(`key ${escKey} is invalid`));
 	}
 
 	if (key.length == 2) {
@@ -242,7 +245,7 @@ function parseShortKey(key) {
 		if (key.match(/^[A-Z\-][a-z\-]$/)) {
 			return `${key[0]}${clr(key[0], key[1])}`.repeat(4);
 		}
-		throw new Error(`key ${escKey} is invalid`);
+		showError(new Error(`key ${escKey} is invalid`));
 	}
 
 	if (key.length == 4) {
@@ -254,10 +257,11 @@ function parseShortKey(key) {
 		if (key.match(/^([A-Z\-][a-z\-]){2}$/)) {
 			return `${key[0]}${clr(key[0], key[1])}${key[2]}${clr(key[2], key[3])}`.repeat(2);
 		}
-		throw new Error(`key ${escKey} is invalid`);
+		showError(new Error(`key ${escKey} is invalid`));
 	}
 
-	throw new Error(`key ${escKey} has invalid length`);
+	showError(new Error(`key ${escKey} has invalid length`));
+	return key;
 }
 
 /**
@@ -282,7 +286,7 @@ function checkImpossible(key) {
 	});
 	// first, pop layers that can be layered:
 	while (forms.length >= 2) {
-		if ( (forms[forms.length - 1] & forms[forms.length - 2]) ) {
+		if ((forms[forms.length - 1] & forms[forms.length - 2])) {
 			forms.pop();
 		} else {
 			break;
@@ -295,18 +299,20 @@ function checkImpossible(key) {
 	function rotateForm(form) {
 		return (form >> 1) + 8 * (form & 1);
 	}
+	let highestReached = 0;
 	for (let j = 0; j < 4; j++) {
 		console.log(j, forms.map(e => e.toString(2)));
 		// second, check if half has no empty layers and other half is dropped
 		let hasNoEmpty = true;
-		for (let i = 1; i < forms.length; i++) {
-			if ((forms[i] & 3) && !(forms[i - 1] & 3)) {
+		let l1, l2;
+		for (let l1 = 1; l1 < forms.length; l1++) {
+			if ((forms[l1] & 3) && !(forms[l1 - 1] & 3)) {
 				hasNoEmpty = false;
 			}
 		}
 		let isDropped = true;
-		for (let i = 1; i < forms.length; i++) {
-			if ((forms[i] & 12) & ~(forms[i - 1] & 12)) {
+		for (let l2 = 1; l2 < forms.length; l2++) {
+			if ((forms[l2] & 12) & ~(forms[l2 - 1] & 12)) {
 				isDropped = false;
 			}
 		}
@@ -314,9 +320,10 @@ function checkImpossible(key) {
 			console.log('can split in rotation', j);
 			break;
 		}
+		highestReached = Math.max(highestReached, Math.min(l1, l2) - 1);
 		forms = forms.map(rotateForm);
 		if (j == 3) {
-			return `Impossible to create bottom ${forms.length} layers`;
+			return `Impossible to create bottom ${highestReached} layers`;
 		}
 	}
 }
@@ -657,7 +664,7 @@ function initVariants() {
     		<span class="colorPreview" style="background: ${enumColorsToHexCode[color]};"></span>
     		${color[0].toUpperCase() + color.slice(1)}
     	`;
-    	li.onclick = () => viewShape(enumSubShapeToShortcode[enumSubShape.circle] + enumColorToShortcode[color]);
+		li.onclick = () => viewShape(enumSubShapeToShortcode[enumSubShape.circle] + enumColorToShortcode[color]);
 		ulColors.append(li);
 	}
 }
@@ -666,7 +673,12 @@ function showError(msg) {
 	const errorDiv = document.getElementById("error");
 	errorDiv.classList.toggle("hasError", !!msg);
 	if (msg) {
-		errorDiv.innerHTML = msg;
+		if (errorDiv.innerText == "Shape generated") {
+			errorDiv.innerHTML = msg;
+		} else {
+			errorDiv.innerHTML += '<br>' + msg;
+		}
+		console.error(msg);
 	} else {
 		errorDiv.innerText = "Shape generated";
 	}
