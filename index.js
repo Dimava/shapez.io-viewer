@@ -3,45 +3,80 @@
  *
  */
 
-/** @enum {string} */
-const enumSubShape = {
-	rect: "rect",
-	circle: "circle",
-	star: "star",
-	windmill: "windmill",
-
-	clover: "clover",
-	star8: "star8",
-	rhombus: "rhombus",
-	plus: "plus",
-	razor: "razor",
-	sun: "sun",
-
-	none: "none",
-};
 
 /** @enum {string} */
-const enumSubShapeToShortcode = {
-	[enumSubShape.rect]: "R",
-	[enumSubShape.circle]: "C",
-	[enumSubShape.star]: "S",
-	[enumSubShape.windmill]: "W",
-
-	[enumSubShape.clover]: "L",
-	[enumSubShape.star8]: "T",
-	[enumSubShape.rhombus]: "B",
-	[enumSubShape.plus]: "P",
-	[enumSubShape.razor]: "Z",
-	[enumSubShape.sun]: "U",
-
-	[enumSubShape.none]: "-",
-};
-
+const enumSubShape = {};
+/** @enum {string} */
+const enumSubShapeToShortcode = {};
 /** @enum {enumSubShape} */
 const enumShortcodeToSubShape = {};
-for (const key in enumSubShapeToShortcode) {
-	enumShortcodeToSubShape[enumSubShapeToShortcode[key]] = key;
+/** @enum {string} */
+const enumDefaultSubShapeColor = {}
+
+
+/** @enum {string} */
+const enumColors = {}
+/** @enum {string} */
+const enumColorToShortcode = {}
+/** @enum {string} */
+const enumColorsToHexCode = {}
+/** @enum {enumColors} */
+const enumShortcodeToColor = {};
+
+const customSubShape = {};
+
+
+function addColor(id, code, hex) {
+	enumColors[id] = id;
+	enumColorToShortcode[id] = code;
+	enumShortcodeToColor[code] = id;
+	enumColorsToHexCode[id] = hex;
+
 }
+
+addColor("red",			"r",	"#ff666a");
+addColor("green",		"g",	"#78ff66");
+addColor("blue",		"b",	"#66a7ff");
+addColor("yellow",		"y",	"#fcf52a");
+addColor("purple",		"p",	"#dd66ff");
+addColor("cyan",		"c",	"#00fcff"); // or #87fff5
+addColor("white",		"w",	"#ffffff");
+addColor("uncolored",	"u",	"#aaaaaa");
+addColor("black",		"b",	"#333333");
+
+
+function addSubShape(id, code, data = null) {
+	enumSubShape[id] = id;
+	enumSubShapeToShortcode[id] = code;
+	enumShortcodeToSubShape[code] = id;
+	if (typeof data == 'string') {
+		enumDefaultSubShapeColor[id] = enumShortcodeToColor[data];
+	} else if (data && data.color) {
+		enumDefaultSubShapeColor[id] = enumShortcodeToColor[data.color];
+	} else {
+		enumDefaultSubShapeColor[id] = enumShortcodeToColor["u"];
+	}
+	if (data && data.draw) {
+		customSubShape[id] = data;
+	}
+	return code;
+}
+
+addSubShape("rect",		"R");
+addSubShape("circle",	"C");
+addSubShape("star",		"S");
+addSubShape("windmill",	"W");
+
+addSubShape("clover",	"L",	"g");
+addSubShape("star8",	"T");
+addSubShape("rhombus",	"B");
+addSubShape("plus",		"P");
+addSubShape("razor",	"Z");
+addSubShape("sun",		"U",	"y");
+
+addSubShape("none",		"-",	"-");
+
+
 
 const arrayQuadrantIndexToOffset = [
 	{ x: 1, y: -1 }, // tr
@@ -50,79 +85,10 @@ const arrayQuadrantIndexToOffset = [
 	{ x: -1, y: -1 }, // tl
 ];
 
-// From colors.js
-/** @enum {string} */
-const enumColors = {
-	red: "red",
-	green: "green",
-	blue: "blue",
 
-	yellow: "yellow",
-	purple: "purple",
-	cyan: "cyan",
 
-	white: "white",
-	uncolored: "uncolored",
 
-	black: "black",
-};
 
-/** @enum {string} */
-const enumColorToShortcode = {
-	[enumColors.red]: "r",
-	[enumColors.green]: "g",
-	[enumColors.blue]: "b",
-
-	[enumColors.yellow]: "y",
-	[enumColors.purple]: "p",
-	[enumColors.cyan]: "c",
-
-	[enumColors.white]: "w",
-	[enumColors.uncolored]: "u",
-
-	[enumColors.black]: "k",
-};
-
-/** @enum {string} */
-const enumColorsToHexCode = {
-	[enumColors.red]: "#ff666a",
-	[enumColors.green]: "#78ff66",
-	[enumColors.blue]: "#66a7ff",
-
-	// red + green
-	[enumColors.yellow]: "#fcf52a",
-
-	// red + blue
-	[enumColors.purple]: "#dd66ff",
-
-	// blue + green
-	// [enumColors.cyan]: "#87fff5",
-	[enumColors.cyan]: "#00fcff",
-
-	// blue + green + red
-	[enumColors.white]: "#ffffff",
-
-	[enumColors.uncolored]: "#aaaaaa",
-
-	[enumColors.black]: "#333333",
-};
-
-/** @enum {enumColors} */
-const enumShortcodeToColor = {};
-for (const key in enumColorToShortcode) {
-	enumShortcodeToColor[enumColorToShortcode[key]] = key;
-}
-
-/** @enum {string} */
-const enumDefaultSubShapeColor = {
-	[enumSubShape.clover]: enumColors.green,
-	[enumSubShape.sun]: enumColors.yellow,
-};
-
-for (const key in enumSubShapeToShortcode) {
-	enumShortcodeToSubShape[enumSubShapeToShortcode[key]] = key;
-	if (!enumDefaultSubShapeColor[key]) enumDefaultSubShapeColor[key] = enumColors.uncolored;
-}
 
 CanvasRenderingContext2D.prototype.beginCircle = function(x, y, r) {
 	if (r < 0.05) {
