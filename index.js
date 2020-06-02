@@ -122,6 +122,10 @@ function fromShortKey(key) {
 	for (let i = 0; i < sourceLayers.length; ++i) {
 		let text = sourceLayers[i];
 
+		if (checkUnknown(text)) {
+			throw new Error(checkUnknown(text));
+		}
+
 		if (text.length !== 8) {
 			throw new Error("Invalid layer: '" + text + "' -> must be 8 characters");
 		}
@@ -257,7 +261,7 @@ function checkImpossible(key) {
 		return (form >> 1) + 8 * (form & 1);
 	}
 	for (let j = 0; j < 4; j++) {
-		console.log(j, forms.map(e=>e.toString(2)));
+		console.log(j, forms.map(e => e.toString(2)));
 		// second, check if half has no empty layers and other half is dropped
 		let hasNoEmpty = true;
 		for (let i = 1; i < forms.length; i++) {
@@ -281,6 +285,42 @@ function checkImpossible(key) {
 		}
 	}
 }
+
+/**
+ * Check if the key contains uncnown colors and shapes
+ * @param {string} key
+ * @returns {string | void}
+ */
+function checkUnknown(key) {
+	let badShapes = new Set();
+	let badColors = new Set();
+	for (let c of key) {
+		if (c.match(/[A-Z]/)) {
+			if (!enumShortcodeToSubShape[c]) {
+				badShapes.add(c);
+			}
+		}
+		if (c.match(/[a-z]/)) {
+			if (!enumShortcodeToColor[c]) {
+				badColors.add(c);
+			}
+		}
+	}
+	const badShapeStr = `Unkown shape${badShapes.size > 1 ? 's' : ''}: <code>${Array.from(badShapes).join(' ')}</code>`;
+	const badColorStr = `Unkown color${badShapes.size > 1 ? 's' : ''}: <code>${Array.from(badColors).join(' ')}</code>`;
+
+	if (badShapes.size && badColors.size) {
+		return badShapeStr + '<br>' + badColorStr;
+	}
+	if (badShapes.size) {
+		return badShapeStr;
+	}
+	if (badColors.size) {
+		return badColorStr;
+	}
+}
+
+
 
 function renderShape(layers) {
 	const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById(
