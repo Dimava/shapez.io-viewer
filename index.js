@@ -700,8 +700,9 @@ function initEditor() {
 	ta.value = `
 		addSubShape("myShape", "M", {
 			size: 1,
+			color: 'u',
 			draw(ctx, layerIndex, quarterIndex) {
-				with (ctx) {
+				with (ctx) { with (Math) {
 		////////////////////////
 		// draw mostly in [0,1]x[0,1] square
 
@@ -712,7 +713,7 @@ function initEditor() {
 
 
 		////////////////////////
-				}
+				} }
 			}
 		})
 	`.replace(/\n\t\t/g, '\n').slice(1); // .replace(/\t/g, '');
