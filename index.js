@@ -42,7 +42,7 @@ addColor("purple",		"p",	"#dd66ff");
 addColor("cyan",		"c",	"#00fcff"); // or #87fff5
 addColor("white",		"w",	"#ffffff");
 addColor("uncolored",	"u",	"#aaaaaa");
-addColor("black",		"b",	"#333333");
+addColor("black",		"k",	"#333333");
 
 
 function addSubShape(id, code, data = null) {
