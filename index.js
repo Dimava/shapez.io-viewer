@@ -650,8 +650,15 @@ function initVariants() {
 	const ulShapes = document.querySelector('#shapeCodes');
 	for (let shape of Object.values(enumSubShape)) {
 		let li = document.createElement('li');
-		li.innerHTML = `<code>${enumSubShapeToShortcode[shape]}</code> ${shape[0].toUpperCase() + shape.slice(1)}`;
+		li.innerHTML = `
+			<code>${enumSubShapeToShortcode[shape]}</code>
+			<canvas width="16" height="16"></canvas>
+			${shape[0].toUpperCase() + shape.slice(1)}
+		`;
 		li.onclick = () => viewShape(enumSubShapeToShortcode[shape]);
+		let cv = li.querySelector('canvas');
+		let ctx = cv.getContext('2d');
+		internalGenerateShapeBuffer(formLayers([parseShortKey(enumSubShapeToShortcode[shape])]), cv, ctx, 16, 16, 1);
 		ulShapes.append(li);
 	}
 	// <ul id="colorCodes">
