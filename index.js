@@ -196,7 +196,7 @@ function parseShortKey(key) {
 		}
 		// A -> AuAuAuAu
 		if (key.match(/^[A-Z]$/)) {
-			return `${key}u`.repeat(4);
+			return `${key}${clr(key)}`.repeat(4);
 		}
 		throw new Error(`key ${escKey} is invalid`);
 	}
