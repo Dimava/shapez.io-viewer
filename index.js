@@ -408,7 +408,7 @@ function internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi) {
 
 			context.fillStyle = enumColorsToHexCode[color];
 			context.strokeStyle = "#555"; // THEME.items.outline;
-			context.lineWidth = 1; // THEME.items.outlineWidth;
+			context.lineWidth = 1 * Math.pow(0.8, layerIndex); // THEME.items.outlineWidth;
 
 			const insetPadding = 0.0;
 
