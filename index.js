@@ -717,6 +717,7 @@ function initEditor() {
 	`.replace(/\n\t\t/g, '\n').slice(1); // .replace(/\t/g, '');
 	ta.oninput = updateEditor;
 	updateEditor();
+	document.querySelector('.infoBox').ondblclick = null;
 }
 
 
