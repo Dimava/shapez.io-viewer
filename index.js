@@ -108,14 +108,20 @@ function radians(degrees) {
  * Generates the definition from the given short key
  */
 function fromShortKey(key) {
-  const sourceLayers = key.split(":");
+	const sourceLayers = key.replace(/\s/g, '').split(":").filter(Boolean).map(parseShortKey);
+
+	if (checkImpossible(sourceLayers.join(':'))) {
+		throw new Error(checkImpossible(sourceLayers.join(':')));
+	}
+
 	if (sourceLayers.length > 4) {
 		throw new Error("Only 4 layers allowed");
 	}
 
 	let layers = [];
 	for (let i = 0; i < sourceLayers.length; ++i) {
-    const text = sourceLayers[i];
+		let text = sourceLayers[i];
+
 		if (text.length !== 8) {
 			throw new Error("Invalid layer: '" + text + "' -> must be 8 characters");
 		}
@@ -145,6 +151,135 @@ function fromShortKey(key) {
 	}
 
 	return layers;
+}
+
+
+function textToHTML(text) {
+	const span = document.createElement('span');
+	span.innerText = text;
+	return span.innerHTML;
+}
+
+
+
+/**
+ * Parse short key into a full one
+ * @param {string} key
+ * @returns {string}
+ */
+function parseShortKey(key) {
+	const emptyLayer = '--'.repeat(4);
+	const clr = (A, c = 'u') => A == '-' ? '-' : c == '-' ? 'u' : c;
+
+	const escKey = `<code>${textToHTML(key)}</code>`;
+
+	if (!key) {
+		return emptyLayer;
+	}
+
+	if (key.match(/[^A-Za-z:\-]/)) {
+		let match = key.match(/[^A-Za-z:\-]/);
+		throw new Error(`key ${escKey} has invalid symbol: <code>${textToHTML(match[0])}</code>`);
+	}
+
+	if (key.length == 8) {
+		return key;
+	}
+
+	if (key.length == 1) {
+		if (key == '-') {
+			return emptyLayer;
+		}
+		// A -> AuAuAuAu
+		if (key.match(/^[A-Z]$/)) {
+			return `${key}u`.repeat(4);
+		}
+		throw new Error(`key ${escKey} is invalid`);
+	}
+
+	if (key.length == 2) {
+		// AB -> AuBuAuBu
+		if (key.match(/^[A-Z\-]{2}$/)) {
+			return `${key[0]}${clr(key[0])}${key[1]}${clr(key[1])}`.repeat(2);
+		}
+		// Ac -> AcAcAcAc
+		if (key.match(/^[A-Z\-][a-z\-]$/)) {
+			return `${key[0]}${clr(key[0], key[1])}`.repeat(4);
+		}
+		throw new Error(`key ${escKey} is invalid`);
+	}
+
+	if (key.length == 4) {
+		// ABCD -> AuBuCuDu
+		if (key.match(/^[A-Z\-]{4}$/)) {
+			return `${key[0]}${clr(key[0])}${key[1]}${clr(key[1])}${key[2]}${clr(key[2])}${key[3]}${clr(key[3])}`;
+		}
+		// AcBd -> AcBdAcBd
+		if (key.match(/^([A-Z\-][a-z\-]){2}$/)) {
+			return `${key[0]}${clr(key[0], key[1])}${key[2]}${clr(key[2], key[3])}`.repeat(2);
+		}
+		throw new Error(`key ${escKey} is invalid`);
+	}
+
+	throw new Error(`key ${escKey} has invalid length`);
+}
+
+/**
+ * Check if the shape is impossible and why
+ * @param {string} key
+ * @returns {string | void}
+ */
+function checkImpossible(key) {
+	let layers = key.split(':');
+	const emptyLayer = '--'.repeat(4);
+	while (layers[layers.length - 1] == emptyLayer) {
+		layers.pop();
+	}
+	if (layers.length > 4) {
+		return `Impossible to stack ${layers.length} layers, max is 4`;
+	}
+	if (layers.includes(emptyLayer)) {
+		return `Impossible to create empty layer #${layers.indexOf(emptyLayer)}`;
+	}
+	let forms = layers.map(l => {
+		return 8 * (l[0] == '-') + 4 * (l[2] == '-') + 2 * (l[4] == '-') + 1 * (l[6] == '-');
+	});
+	// first, pop layers that can be layered:
+	while (forms.length >= 2) {
+		if (forms[length - 1] & forms[length - 2]) {
+			forms.pop();
+		} else {
+			break;
+		}
+	}
+
+	function rotateForm(form) {
+		return (form >> 1) + 8 * (form & 1);
+	}
+	for (let j = 0; j < 4; j++) {
+		console.log(j, forms.map(e=>e.toString(2)));
+		// second, check if half has no empty layers and other half is dropped
+		let hasNoEmpty = true;
+		for (let i = 1; i < forms.length; i++) {
+			if ((forms[i] & 3) && !(forms[i - 1] & 3)) {
+				hasNoEmpty = false;
+			}
+		}
+		let isDropped = true;
+		for (let i = 0; i < forms.length; i++) {
+			if ((forms[i] & 12) > (forms[i - 1] & 12)) {
+				isDropped = false;
+			}
+		}
+		if (hasNoEmpty && isDropped) {
+			console.log('can split in rotation', j);
+			break;
+		}
+		forms = forms.map(rotateForm);
+		if (j == 3) {
+			return `Impossible to create bottom ${forms.length} layers`;
+		}
+	}
 }
 
 function renderShape(layers) {
@@ -286,7 +421,7 @@ function showError(msg) {
 	const errorDiv = document.getElementById("error");
 	errorDiv.classList.toggle("hasError", !!msg);
 	if (msg) {
-		errorDiv.innerText = msg;
+		errorDiv.innerHTML = msg;
 	} else {
 		errorDiv.innerText = "Shape generated";
 	}

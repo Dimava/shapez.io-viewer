@@ -74,6 +74,16 @@ a{
     align-items: center;
 }
 
+#error code {
+    color: darkred;
+    font-weight: bold;
+    position: relative;
+    top: 1px;
+    font-size: 14px;
+    background: #f0f0f0;
+    margin: 5px;
+}
+
 #error:not(.hasError) {
     color: rgb(71, 179, 71);
 }
