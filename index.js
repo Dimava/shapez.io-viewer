@@ -605,19 +605,22 @@ function internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi) {
 						context.scale(dims, -dims);
 						context.beginPath();
 
-						const inner = 0.4;
-						const rad = 0.02;
+						const size = 1.3;
+						context.scale(size, size);
+
+						const PI = Math.PI;
+						const PI3 = PI * 3 / 8 * 0.75;
 
 						const c = 1 / Math.cos(Math.PI / 8);
 						const b = c * Math.sin(Math.PI / 8);
 
 						context.moveTo(0, 0);
 						context.rotate(Math.PI / 2);
-						context.arc(c, 0, b, -Math.PI, -(5 / 8) * Math.PI);
+						context.arc(c, 0, b, -PI, -PI + PI3);
 						context.rotate(-Math.PI / 4);
-						context.arc(c, 0, b, (-1 - 3 / 8) * Math.PI, (-5 / 8) * Math.PI);
+						context.arc(c, 0, b, -PI - PI3, -PI + PI3);
 						context.rotate(-Math.PI / 4);
-						context.arc(c, 0, b, (5 / 8) * Math.PI, 1 * Math.PI);
+						context.arc(c, 0, b, PI - PI3, PI);
 
 						context.closePath();
 						context.restore();
