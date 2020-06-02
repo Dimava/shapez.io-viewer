@@ -579,7 +579,7 @@ function internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi) {
 						context.scale(dims, -dims);
 						context.beginPath();
 
-						const size = 1.3;
+						const size = 1.3;   
 						context.scale(size, size);
 
 						const PI = Math.PI;
@@ -609,10 +609,27 @@ function internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi) {
 					{
 						context.save();
 						context.translate(innerDims, -innerDims);
-						context.scale(dims/8, dims/8);
+						context.scale(dims, -dims);
 						context.beginPath();
-						context.fillText(subShape || '?', 0, 0);
+						const custom = customSubShape[subShape];
+						if (custom) {
+							if (custom.size) {
+								context.scale(custom.size, custom.size);
+							}
+							if (custom.draw) {
+								try {
+									custom.draw(context, layerIndex, quadrantIndex);
+								} catch(e) {}
+							}
+							if (!custom.open) {
+								context.closePath();
+							}
+						} else {
+							context.scale(1 / 8, -1 / 8);
+							context.fillText(subShape || '?', 0, 0);
+						}
 						context.restore();
+
 					}
 			}
 
@@ -635,6 +652,7 @@ function initVariants() {
 	// <ul id="shapeCodes">
 	//   <li><code>C</code> Circle</li>
 	const ulShapes = document.querySelector('#shapeCodes');
+	ulShapes.innerHTML = '';
 	for (let shape of Object.values(enumSubShape)) {
 		let li = document.createElement('li');
 		li.innerHTML = `
@@ -655,6 +673,7 @@ function initVariants() {
 	//     Red
 	//   </li>
 	const ulColors = document.querySelector('#colorCodes');
+	ulColors.innerHTML = '';
 	for (let color of Object.values(enumColors)) {
 		let li = document.createElement('li');
 		li.innerHTML = `
@@ -664,6 +683,56 @@ function initVariants() {
     	`;
 		li.onclick = () => viewShape(enumSubShapeToShortcode[enumSubShape.circle] + enumColorToShortcode[color]);
 		ulColors.append(li);
+	}
+}
+
+
+function initEditor() {
+	const infoBox = document.querySelector('.infoBox');
+	for (let el of document.querySelectorAll('.infoBox>p, .infoBox>br, .infoBox>h2, .infoBox>p+h3')) {
+		el.remove();
+	}
+	const ta = document.createElement('textarea');
+	ta.style.width = '500px';
+	ta.style.height = '300px';
+	infoBox.prepend(ta);
+	ta.value = `
+		addSubShape("myShape", "M", {
+			size: 1,
+			draw(ctx, layerIndex, quarterIndex) {
+				with (ctx) {
+		////////////////////////
+		// draw mostly in [0,1]x[0,1] square
+
+
+		moveTo(0, 0)
+		lineTo(1, 1)
+		lineTo(1, 0)
+
+
+		////////////////////////
+				}
+			}
+		})
+	`.replace(/\n\t\t/g, '\n').slice(1); // .replace(/\t/g, '');
+	ta.oninput = updateEditor;
+	updateEditor();
+}
+
+
+function updateEditor() {
+	try {
+		const ta = document.querySelector('textarea');
+		const val = ta.value;
+		const code = eval(val);
+		if (!document.getElementById("code").value.includes(code)) {
+			document.getElementById("code").value = code;
+		}
+		generate();
+		initVariants();
+	} catch(err) {
+		showError(null);
+		showError(err);
 	}
 }
 
@@ -707,6 +776,7 @@ window.debounce = (fn) => {
 // @ts-ignore
 window.addEventListener("load", () => {
 	initVariants();
+	document.querySelector('.infoBox').ondblclick = initEditor;
 	if (window.location.search) {
 		const key = window.location.search.substr(1);
 		document.getElementById("code").value = key;
