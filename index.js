@@ -340,6 +340,7 @@ function renderShape(layers) {
 }
 
 function getLayerScale(layerIndex) {
+	return 0.9 * Math.pow(0.9 - 0.22, layerIndex);
 	return Math.max(0.1, 0.9 - layerIndex * 0.22);
 }
 
