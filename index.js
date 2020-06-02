@@ -450,12 +450,40 @@ function renderShape(layers) {
 			context.rotate(-rotation);
 			context.translate(-centerQuadrantX, -centerQuadrantY);
 		}
+
+
 	}
 
 	context.restore();
 }
 
 /////////////////////////////////////////////////////
+
+function initVariants() {
+	// <ul id="shapeCodes">
+	//   <li><code>C</code> Circle</li>
+	const ulShapes = document.querySelector('#shapeCodes');
+	for (let shape of Object.values(enumSubShape)) {
+		let li = document.createElement('li');
+		li.innerHTML = `<code>${enumSubShapeToShortcode[shape]}</code> ${shape[0].toUpperCase() + shape.slice(1)}`;
+		ulShapes.append(li);
+	}
+	// <ul id="colorCodes">
+	//   <li>
+	//     <code>r</code>
+	//     <span class="colorPreview" style="background: #ff666a;"></span>
+	//     Red
+	//   </li>
+	const ulColors = document.querySelector('#colorCodes');
+	for (let color of Object.values(enumColors)) {
+		let li = document.createElement('li');
+		li.innerHTML = `
+    		<code>${enumColorToShortcode[color]}</code>
+    		<span class="colorPreview" style="background: ${enumColorsToHexCode[color]};"></span>
+    		${color[0].toUpperCase() + color.slice(1)}`;
+		ulColors.append(li);
+	}
+}
 
 function showError(msg) {
 	const errorDiv = document.getElementById("error");
@@ -491,6 +519,7 @@ window.debounce = (fn) => {
 
 // @ts-ignore
 window.addEventListener("load", () => {
+	initVariants();
 	if (window.location.search) {
 		const key = window.location.search.substr(1);
 		document.getElementById("code").value = key;
