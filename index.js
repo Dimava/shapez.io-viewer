@@ -339,6 +339,14 @@ function renderShape(layers) {
 	return internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi);
 }
 
+function getLayerScale(layerIndex) {
+	return Math.max(0.1, 0.9 - layerIndex * 0.22);
+}
+
+function getLayerLineWidth(layerIndex) {
+	return Math.pow(0.8, layerIndex);
+}
+
 function internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi) {
 	context.translate((w * dpi) / 2, (h * dpi) / 2);
 	context.scale((dpi * w) / 23, (dpi * h) / 23);
@@ -355,7 +363,7 @@ function internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi) {
 	for (let layerIndex = 0; layerIndex < layers.length; ++layerIndex) {
 		const quadrants = layers[layerIndex];
 
-		const layerScale = Math.max(0.1, 0.9 - layerIndex * 0.22);
+		const layerScale = getLayerScale(layerIndex);
 
 		for (let quadrantIndex = 0; quadrantIndex < 4; ++quadrantIndex) {
 			if (!quadrants[quadrantIndex]) {
@@ -374,7 +382,7 @@ function internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi) {
 
 			context.fillStyle = enumColorsToHexCode[color];
 			context.strokeStyle = "#555"; // THEME.items.outline;
-			context.lineWidth = 1 * Math.pow(0.8, layerIndex); // THEME.items.outlineWidth;
+			context.lineWidth = getLayerLineWidth(layerIndex); // THEME.items.outlineWidth;
 
 			const insetPadding = 0.0;
 
