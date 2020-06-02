@@ -16,6 +16,8 @@ const enumSubShape = {
 	plus: "plus",
 	razor: "razor",
 	sun: "sun",
+
+	none: "none",
 };
 
 /** @enum {string} */
@@ -31,6 +33,8 @@ const enumSubShapeToShortcode = {
 	[enumSubShape.plus]: "P",
 	[enumSubShape.razor]: "Z",
 	[enumSubShape.sun]: "U",
+
+	[enumSubShape.none]: "-",
 };
 
 /** @enum {enumSubShape} */
@@ -150,45 +154,35 @@ function fromShortKey(key) {
 		showError(new Error("Only 4 layers allowed"));
 	}
 
-	let layers = [];
 	for (let i = 0; i < sourceLayers.length; ++i) {
-		let text = sourceLayers[i];
-
-		if (checkUnknown(text)) {
-			showError(new Error(checkUnknown(text)));
+		if (checkUnknown(sourceLayers[i])) {
+			showError(new Error(checkUnknown(sourceLayers[i])));
 		}
+	}
 
-		// if (text.length !== 8) {
-		// 	throw new Error("Invalid layer: '" + textToHTML(text) + "' -> must be 8 characters");
-		// }
+	return formLayers(sourceLayers);
 
-		// if (text === "--".repeat(4)) {
-		// 	throw new Error("Empty layers are not allowed");
-		// }
+}
+
+function formLayers(keys) {
+	let layers = [];
+	for (let i = 0; i < keys.length; ++i) {
+		let text = keys[i];
 
 		const quads = [null, null, null, null];
 		for (let quad = 0; quad < 4; ++quad) {
 			const shapeText = text[quad * 2 + 0];
-			const subShape = enumShortcodeToSubShape[shapeText];
-			const color = enumShortcodeToColor[text[quad * 2 + 1]];
-			if (subShape) {
-				if (!color) {
-					// throw new Error("Invalid shape color key: " + textToHTML(key));
-				}
-				quads[quad] = {
-					subShape,
-					color,
-				};
-			} else if (shapeText !== "-") {
-				// throw new Error("Invalid shape key: " + textToHTML(shapeText));
-			}
+			const subShape = enumShortcodeToSubShape[shapeText] || shapeText;
+			const color = enumShortcodeToColor[text[quad * 2 + 1]] || enumColors.uncolored;
+			quads[quad] = {
+				subShape,
+				color,
+			};
 		}
 		layers.push(quads);
 	}
-
 	return layers;
 }
-
 
 function textToHTML(text) {
 	const span = document.createElement('span');
@@ -619,9 +613,19 @@ function internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi) {
 						context.restore();
 						break;
 					}
+				case enumSubShape.none:
+					{
+						context.beginPath();
+						break;
+					}
 				default:
 					{
-						assertAlways(false, "Unkown sub shape: " + subShape);
+						context.save();
+						context.translate(innerDims, -innerDims);
+						context.scale(dims/8, dims/8);
+						context.beginPath();
+						context.fillText(subShape || '?', 0, 0);
+						context.restore();
 					}
 			}
 
