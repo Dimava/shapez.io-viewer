@@ -655,7 +655,9 @@ function internalGenerateShapeBuffer(layers, canvas, context, w, h, dpi) {
 							if (custom.draw) {
 								try {
 									custom.draw(context, layerIndex, quadrantIndex);
-								} catch(e) {}
+								} catch(e) {
+									showError(e);
+								}
 							}
 							if (!custom.open) {
 								context.closePath();
@@ -696,7 +698,7 @@ function initVariants() {
 			<canvas width="16" height="16"></canvas>
 			${shape[0].toUpperCase() + shape.slice(1)}
 		`;
-		li.onclick = () => viewShape(enumSubShapeToShortcode[shape]);
+		li.onclick = () => selectVariant(enumSubShapeToShortcode[shape]);
 		let cv = li.querySelector('canvas');
 		let ctx = cv.getContext('2d');
 		internalGenerateShapeBuffer(formLayers([parseShortKey(enumSubShapeToShortcode[shape])]), cv, ctx, 16, 16, 1);
@@ -717,7 +719,7 @@ function initVariants() {
     		<span class="colorPreview" style="background: ${enumColorsToHexCode[color]};"></span>
     		${color[0].toUpperCase() + color.slice(1)}
     	`;
-		li.onclick = () => viewShape(enumSubShapeToShortcode[enumSubShape.circle] + enumColorToShortcode[color]);
+		li.onclick = () => selectVariant(enumSubShapeToShortcode[enumSubShape.circle] + enumColorToShortcode[color]);
 		ulColors.append(li);
 	}
 }
@@ -733,9 +735,11 @@ function initEditor() {
 	ta.style.height = '300px';
 	infoBox.prepend(ta);
 	ta.value = `
-		addSubShape("myShape", "M", {
+		addColor("orange", "o", "orange")
+		<!-->
+		addSubShape("newShape", "N", {
 			size: 1,
-			color: 'u',
+			color: 'o',
 			draw(ctx, layerIndex, quarterIndex) {
 				with (ctx) { with (Math) {
 		////////////////////////
@@ -751,27 +755,77 @@ function initEditor() {
 				} }
 			}
 		})
-	`.replace(/\n\t\t/g, '\n').slice(1); // .replace(/\t/g, '');
+	`.replace(/\n\t\t/g, '\n').slice(1, -2); // .replace(/\t/g, '');
 	ta.oninput = updateEditor;
+	loadVariants();
+	if (!enumShortcodeToSubShape["N"]) {
+		updateEditor();
+	}
+	selectVariant("No");
 	updateEditor();
 	document.querySelector('.infoBox').ondblclick = null;
+
 }
 
 
 function updateEditor() {
 	try {
-		const ta = document.querySelector('textarea');
-		const val = ta.value;
-		const code = eval(val);
-		if (!document.getElementById("code").value.includes(code)) {
-			document.getElementById("code").value = code;
-		}
-		generate();
-		initVariants();
-	} catch(err) {
 		showError(null);
+		const ta = document.querySelector('textarea');
+		const vals = ta.value.split(/<!-->/);
+		for (let val of vals) {
+			val = val.trim();
+			const code = eval(val);
+			if (
+				typeof code == 'string' &&
+				code.length < 44 &&
+				!document.getElementById("code").value.includes(code)
+			) {
+				document.getElementById("code").value = code;
+			}
+			generate();
+			initVariants();
+			const errorDiv = document.getElementById("error");
+			if (errorDiv.innerText == "Shape generated") {
+				saveVariant(code.slice(-1), val);
+			}
+		}
+	} catch(err) {
 		showError(err);
 	}
+}
+
+function saveVariant(code, val) {
+	let allVariants = localStorage.getItem('shapezCustomShapeCodes') || "";
+	if (!allVariants.includes(code)) {
+		localStorage.setItem('shapezCustomShapeCodes', allVariants + code);
+	}
+	localStorage.setItem('shapezCustomShapes_' + code, val);
+}
+
+function loadVariants() {
+	let allVariants = localStorage.getItem("shapezCustomShapeCodes") || "";
+	for (let code of allVariants) {
+		let val = localStorage.getItem('shapezCustomShapes_' + code);
+		try {
+			eval(val);
+		} catch(err) {
+			showError(err);
+		}
+	}
+}
+
+function selectVariant(key) {
+	const ta = document.querySelector('textarea');
+	const valsS = key.split('').filter(c => customSubShape[enumShortcodeToSubShape[c]]);
+	const valsC = key.split('').filter(c => enumShortcodeToColor[c]);
+	let ar = [];
+	ar.push(...valsC.map(c => localStorage.getItem('shapezCustomShapes_' + c) || ""));
+	ar.push(...valsS.map(c => localStorage.getItem('shapezCustomShapes_' + c) || ""));
+	ta.value = ar.filter(Boolean).join('\n<!-->\n');
+
+	document.getElementById("code").value = key;
+	generate();
 }
 
 function showError(msg) {
@@ -815,6 +869,9 @@ window.debounce = (fn) => {
 window.addEventListener("load", () => {
 	initVariants();
 	document.querySelector('.infoBox').ondblclick = initEditor;
+	if (localStorage.getItem("shapezCustomShapeCodes")) {
+		initEditor();
+	}
 	if (window.location.search) {
 		const key = window.location.search.substr(1);
 		document.getElementById("code").value = key;
