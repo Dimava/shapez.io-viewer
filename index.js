@@ -26,12 +26,29 @@ const enumShortcodeToColor = {};
 const customSubShape = {};
 
 
-function addColor(id, code, hex) {
+function addColor(id, code, hex = id) {
+	if (typeof code != "string") {
+		throw new Error('2nd arg of addColor should be string');
+	}
+	code = code.toLowerCase();
+	if (!id || !code) {
+		return;
+	}
+	if (enumColors[id] && enumColorToShortcode[id] != code) {
+		id += '2';
+	}
+	if (enumShortcodeToColor[code]) {
+		let cid = enumShortcodeToColor[code];
+		delete enumColors[cid];
+		delete enumColorToShortcode[cid];
+		delete enumShortcodeToColor[code];
+		delete enumColorsToHexCode[cid];
+	}
 	enumColors[id] = id;
 	enumColorToShortcode[id] = code;
 	enumShortcodeToColor[code] = id;
 	enumColorsToHexCode[id] = hex;
-
+	return 'C' + code;
 }
 
 addColor("red",			"r",	"#ff666a");
@@ -46,6 +63,24 @@ addColor("black",		"k",	"#333333");
 
 
 function addSubShape(id, code, data = null) {
+	code = code.toUpperCase();
+	if (!id || !code) {
+		return;
+	}
+	if (enumSubShape[id] && enumSubShapeToShortcode[id] != code) {
+		id += '2';
+	}
+	if (enumShortcodeToSubShape[code]) {
+		let cid = enumShortcodeToSubShape[code];
+		if (!customSubShape[cid]) {
+			throw new Error('code already exists!');
+		}
+		delete enumSubShape[cid];
+		delete enumSubShapeToShortcode[cid];
+		delete enumShortcodeToSubShape[code];
+		delete enumDefaultSubShapeColor[cid];
+		delete customSubShape[cid];
+	}
 	enumSubShape[id] = id;
 	enumSubShapeToShortcode[id] = code;
 	enumShortcodeToSubShape[code] = id;
