@@ -277,7 +277,7 @@ function checkImpossible(key) {
 		return `Impossible to create empty layer #${layers.indexOf(emptyLayer)}`;
 	}
 	let forms = layers.map(l => {
-		return 8 * (l[0] != '-') + 4 * (l[2] != '-') + 2 * (l[4] != '-') + 1 * (l[6] != '-');
+		return 0b1000 * (l[0] != '-') + 0b0100 * (l[2] != '-') + 0b0010 * (l[4] != '-') + 0b0001 * (l[6] != '-');
 	});
 	// first, pop layers that can be layered:
 	while (forms.length >= 2) {
@@ -292,7 +292,7 @@ function checkImpossible(key) {
 	}
 
 	function rotateForm(form) {
-		return (form >> 1) + 8 * (form & 1);
+		return (form >> 1) + 0b1000 * (form & 0b0001);
 	}
 	let highestReached = 0;
 	for (let j = 0; j < 4; j++) {
@@ -300,15 +300,17 @@ function checkImpossible(key) {
 		// second, check if half has no empty layers and other half is dropped
 		let hasNoEmpty = true;
 		let l1, l2;
-		for (let l1 = 1; l1 < forms.length; l1++) {
-			if ((forms[l1] & 3) && !(forms[l1 - 1] & 3)) {
+		for (l1 = 1; l1 < forms.length; l1++) {
+			if ((forms[l1] & 0b0011) && !(forms[l1 - 1] & 0b0011)) {
 				hasNoEmpty = false;
+				break;
 			}
 		}
 		let isDropped = true;
-		for (let l2 = 1; l2 < forms.length; l2++) {
-			if ((forms[l2] & 12) & ~(forms[l2 - 1] & 12)) {
+		for (l2 = 1; l2 < forms.length; l2++) {
+			if ((forms[l2] & 0b1100) & ~(forms[l2 - 1] & 0b1100)) {
 				isDropped = false;
+				break;
 			}
 		}
 		if (hasNoEmpty && isDropped) {
@@ -318,7 +320,7 @@ function checkImpossible(key) {
 		highestReached = Math.max(highestReached, Math.min(l1, l2) - 1);
 		forms = forms.map(rotateForm);
 		if (j == 3) {
-			return `Impossible to create bottom ${highestReached} layers`;
+			return `Impossible to create layer ${highestReached}`;
 		}
 	}
 }
